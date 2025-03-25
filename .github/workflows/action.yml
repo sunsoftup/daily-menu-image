@@ -1,0 +1,50 @@
+name: 식단 자동 크롤링
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '40 23 * * 1-5'  # KST 08:40
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.13.2]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install python package
+        run: |        
+          pip install selenium
+          pip install requests        
+          pip install twython
+          pip install pillow    
+          pip install gspread        
+          pip install --upgrade google-api-python-client oauth2client
+          pip install playwright
+          python -m playwright install ${{ matrix.browser-channel }} --with-deps
+      
+      - name: Install ubuntu package
+        run: |        
+          sudo apt-get install fonts-unfonts-core
+          sudo apt-get install fonts-unfonts-extra
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add        
+          sudo apt-get install google-chrome-stable    
+          wget https://chromedriver.storage.googleapis.com/100.0.4896.20/chromedriver_linux64.zip
+          unzip ./chromedriver_linux64.zip           
+
+      - name: Run Food Task
+        if: ${{ github.event_name == 'schedule' && contains(github.event.schedule, '40 23') }}
+        run: |
+          python ./food.py
+
+      - name: Run Food Task manual
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          python ./food.py          
