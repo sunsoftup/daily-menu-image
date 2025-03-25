@@ -24,7 +24,7 @@ jobs:
           playwright install chromium
 
       - name: Run script to fetch image
-        run: python fetch_image.py
+        run: python food.py
 
       - name: Commit and push image
         run: |
